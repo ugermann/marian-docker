@@ -5,8 +5,8 @@ mydir  := $(dir $(lastword ${MAKEFILE_LIST}))
 REGISTRY=mariannmt
 
 # Docker image tags
-BETAG=$(shell git rev-parse --short HEAD -- build-environment)
-MCTAG=$(shell git rev-parse --short HEAD -- build-environment marian-compiled)
+BETAG=$(shell git log -1 --abbrev-commit -- build-environment/ | awk '/commit/ { print $$2 }')
+MCTAG=$(shell git log -1 --abbrev-commit -- marian-compiled/ | awk '/commit/ { print $$2 }')
 RTTAG=$(shell git rev-parse --short HEAD)
 
 image/build-environment: IMAGE=build-environment
@@ -25,3 +25,4 @@ image/marian-rest-server: FLAGS=${DOCKER_BUILD_ARGS}
 image/marian-rest-server: FLAGS+=--build-arg MCTAG=${MCTAG}
 image/marian-rest-server:
 	docker build -t ${REGISTRY}/${IMAGE}:${RTTAG} ${FLAGS} ${IMAGE}
+	docker tag ${REGISTRY}/${IMAGE}:${RTTAG} ${REGISTRY}/${IMAGE}:latest
