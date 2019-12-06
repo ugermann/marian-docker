@@ -4,8 +4,10 @@ mydir  := $(dir $(lastword ${MAKEFILE_LIST}))
 
 REGISTRY=mariannmt
 
+# Docker image tags
 BETAG=$(shell git rev-parse --short HEAD -- build-environment)
 MCTAG=$(shell git rev-parse --short HEAD -- build-environment marian-compiled)
+RTTAG=$(shell git rev-parse --short HEAD)
 
 image/build-environment: IMAGE=build-environment
 image/build-environment: FLAGS=${DOCKER_BUILD_ARGS}
@@ -18,10 +20,8 @@ image/marian-compiled: FLAGS+=--build-arg BETAG=${BETAG}
 image/marian-compiled:
 	docker build -t ${REGISTRY}/${IMAGE}:${MCTAG} ${FLAGS} ${IMAGE}
 
-image/marian-runtime: IMAGE=marian-runtime
-image/marian-runtime: FLAGS=${DOCKER_BUILD_ARGS}
-image/marian-runtime: TAG=${MARIAN_VERSION}
-image/marian-runtime: BUILD_ARGS=MARIAN_COMPILED=${REGISTRY}/marian-compiled:${MARIAN_VERSION}
-image/marian-runtime:
-	docker build -t ${REGISTRY}/${IMAGE}:${TAG} $(addprefix --build-arg ,${BUILD_ARGS}) ${FLAGS} ${IMAGE}
-	docker tag ${REGISTRY}/${IMAGE}:${TAG} ${REGISTRY}/${IMAGE}:latest
+image/marian-rest-server: IMAGE=marian-rest-server
+image/marian-rest-server: FLAGS=${DOCKER_BUILD_ARGS}
+image/marian-rest-server: FLAGS+=--build-arg MCTAG=${MCTAG}
+image/marian-rest-server:
+	docker build -t ${REGISTRY}/${IMAGE}:${RTTAG} ${FLAGS} ${IMAGE}
