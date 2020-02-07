@@ -50,7 +50,9 @@ This is the most convenient way to create a Docker image for a specific model.
    ```
    to have the container make use of the GPU #0.
    See https://github.com/NVIDIA/nvidia-docker for more information on
-   using the host's GPU in a running docker container. 
+   using the host's GPU in a running docker container.
+   
+   Note that docker-compose does currently not support the --gpus feature: https://github.com/docker/compose/issues/6691
    
 
 You'll find a web translation page at `http://localhost:18080/api/elg/v1`
