@@ -6,7 +6,7 @@ Docker files for deploying Marian in a Docker container.
 This is the most convenient way to create a Docker image for a specific model.
 
 1. Put all necessary files into a directory:
-   - the binarized model file(s). Binaries with `marian-conv` from the Marian distribution.
+   - the binarized model file(s). Binarize with `marian-conv` from the Marian distribution.
    - the vocabulary file(s)
    - the Dockerfile from `marian-mt-service` in this repository
    - the decoder.yml file. You'll have to create this. Here's an example:
@@ -57,6 +57,7 @@ You'll find a web translation page at `http://localhost:18080/api/elg/v1`
 
 
 ## Recreating `mariannmt/marian-rest-server`
+**Do this only if you can't find mariannmt/marian-rest-server:latest, or if you are using your own custom version of Marian server.**
 
 ```
 make image/build-environment
