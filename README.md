@@ -6,9 +6,9 @@ At this point, each instance supports only a translation direction. (In the futu
 ## Preparatory steps
 
 1. Put all necessary files into a directory:
-   - the binarized model file(s). Binarize with `marian-conv` from the Marian distribution.
+   - the binarized model file(s). Binarize with `marian-conv` from the [Marian distribution](https://github.com/marian-nmt/marian-dev).
    - the vocabulary file(s)
-   - the decoder.yml file. You'll have to create this or adapt it from the decoder file written 
+   - the decoder.yml file. You'll have to create this or adapt it from the `decoder.yml` file written 
      by the Marian training process. Here's an example:
      ```
      relative-paths: true
