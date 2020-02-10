@@ -22,6 +22,7 @@ RUN apt-get install -y \
     autoconf \
     automake \
     binutils \
+    ccache \
     cmake \
     g++ \
     git \
