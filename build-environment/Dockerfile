@@ -21,6 +21,7 @@ RUN apt-get install -y intel-mkl-64bit-2018.2-046
 RUN apt-get install -y \
     autoconf \
     automake \
+    binutils \
     cmake \
     g++ \
     git \
