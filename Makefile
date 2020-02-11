@@ -9,7 +9,6 @@ MARIAN_VERSION=ug-marian-aas
 
 # Docker image tags BE: build environment, RT: runtime
 BETAG=$(shell git log -1 --abbrev-commit -- build-environment/ | awk '/commit/ { print $$2 }')
-# MCTAG=$(shell git log -1 --abbrev-commit -- marian-compiled/ | awk '/commit/ { print $$2 }')
 RTTAG=$(shell git rev-parse --short HEAD)
 
 # Build a Docker image with everything we need to compile Marian.
@@ -21,7 +20,6 @@ image/build-environment:
 	docker tag ${TARGET_REGISTRY}/${IMAGE}:${BETAG} ${TARGET_REGISTRY}/${IMAGE}:latest
 
 # Check out Marian source code
-marian/code/CMakeLists.txt: 
 marian/code/CMakeLists.txt:
 	mkdir -p marian
 	git clone ${MARIAN_REPO}  marian/code
@@ -41,22 +39,21 @@ run_on_docker += ${IMAGE}
 
 # Target for running cmake
 marian/build/CMakeCache.txt: MARIAN_VERSION=ug-marian-aas3
-marian/build/CMakeCache.txt: IMAGE=mariannmt/build-environment
+marian/build/CMakeCache.txt: IMAGE=${TARGET_REGISTRY}/build-environment
 marian/build/CMakeCache.txt: marian/code/CMakeLists.txt
 marian/build/CMakeCache.txt:
 	mkdir -p ${@D}
-	cd marian/code && git checkout ${MARIAN_VERSION}	
+	cd marian/code && git checkout ${MARIAN_VERSION} 
 	${run_on_docker} bash -c 'cd /build && ${cmake_cmd} /repo'
 
-# Target for compiling marian
-marian/build/marian: IMAGE=mariannmt/build-environment
 marian/build/marian: marian/build/CMakeCache.txt
-	cd marian/code && git pull
+marian/build/marian: marian/code/.git
 	${run_on_docker} bash -c 'cd /build && make -j'
 
 runtime: marian-rest-server/opt/app/marian/bin/rest-server
 
 marian-rest-server/opt/app/marian/bin/rest-server: IMAGE=mariannmt/build-environment
+marian-rest-server/opt/app/marian/bin/rest-server: marian/build/marian
 marian-rest-server/opt/app/marian/bin/rest-server: docker_mounts += ${PWD}/marian-rest-server/opt/app:/opt/app
 marian-rest-server/opt/app/marian/bin/rest-server:
 	mkdir -p ${@D}
