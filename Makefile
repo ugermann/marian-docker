@@ -18,6 +18,7 @@ RT.IMAGE=${TARGET_REGISTRY}/marian-rest-server:${RT.TAG}
 .PHONY: image/build-enviroment
 image/build-environment:
 	docker pull ${BE.IMAGE} || docker build -t ${BE.IMAGE} ${@F}
+	docker tag ${BE.IMAGE} $(patsubst %:${BE.TAG},%:latest,${BE.IMAGE})
 
 # Update or check out Marian source code if necessary
 marian/code/.git: update-marian
@@ -41,13 +42,14 @@ run_on_docker += ${IMAGE}
 
 # Run cmake
 marian/build/CMakeCache.txt: IMAGE=${BE.IMAGE}
-marian/build/CMakeCache.txt: marian/code/.git
+marian/build/CMakeCache.txt:
 	mkdir -p ${@D}
-	cd marian/code && git submodule update --init
+	git submodule update --init
 	${run_on_docker} bash -c 'cd /marian/build && ${cmake_cmd} /marian/code'
 
 # Build Marian rest server
 marian/build/marian: IMAGE=${BE.IMAGE}
+marian/build/marian: .git/modules/marian/code
 marian/build/marian: marian/build/CMakeCache.txt
 	${run_on_docker} bash -c 'cd /marian/build && make -j'
 
@@ -59,10 +61,12 @@ marian-rest-server/opt/app/marian/bin/rest-server: marian/build/marian
 	${run_on_docker} bash -c '/usr/bin/strip /marian/build/rest-server -o /opt/app/marian/bin/rest-server'
 
 # update auxiliary files
+marian-rest-server/opt/app/ssplit/nonbreaking_prefixes: .git .git/modules/marian/code
 marian-rest-server/opt/app/ssplit/nonbreaking_prefixes: marian/code/src/3rd_party/ssplit-cpp/nonbreaking_prefixes
 	mkdir -p ${@D}
 	rsync -avui $< ${@D}
 
+marian-rest-server/opt/app/marian/rest: .git .git/modules/marian/code
 marian-rest-server/opt/app/marian/rest: marian/code/src/server/rest
 	rsync -avui $< ${@D}
 
