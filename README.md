@@ -8,7 +8,7 @@ At this point, each instance supports only a translation direction. (In the futu
 1. Put all necessary files into a directory:
    - the binarized model file(s). Binarize with `marian-conv` from the [Marian distribution](https://github.com/marian-nmt/marian-dev).
    - the vocabulary file(s)
-   - the decoder.yml file. You'll have to create this or adapt it from the `decoder.yml` file written 
+   - the decoder.yml file. You'll have to create this or adapt it from the `decoder.yml` file written
      by the Marian training process. Here's an example:
      ```
      relative-paths: true
@@ -39,7 +39,7 @@ At this point, each instance supports only a translation direction. (In the futu
      ```
      docker run --rm -d -p 18080:18080 -v /path/to/the/model/directory:/opt/app/marian/model mariannmt/marian-rest-server
      ```
-   - with GPU utilization. This requires Docker 19.03 or above (see https://github.com/NVIDIA/nvidia-docker) 
+   - with GPU utilization. This requires Docker 19.03 or above (see https://github.com/NVIDIA/nvidia-docker)
      and unfortunately currently won't work within docker-compose (see https://github.com/docker/compose/issues/6691).
      ```
      docker run --rm --gpus device=${GPU_IDs} -d -p 18080:18080 -v /path/to/the/model/directory:/opt/app/marian/model mariannmt/marian-rest-server
@@ -57,7 +57,7 @@ You'll find a web translation page at `http://localhost:18080/api/elg/v1`. The A
         docker build -t ${IMAGE_ID} /path/to/the/model/directory
         ```
       IMAGE_ID is the name of the resulting Docker image (e.g. <your dockerhub account>/marian-rest-server:<model id>).
-      
+
    3. to publish, push the image to dockerhub:
       ```
       docker push ${IMAGE_ID}
@@ -66,12 +66,11 @@ You'll find a web translation page at `http://localhost:18080/api/elg/v1`. The A
 Normally, this is not necessary. **Do this only if you can't find mariannmt/marian-rest-server:latest, or if you are using your own custom version of Marian server.**
 
 In order to achieve compact images, we use a staged build process:
-- Create an image that contains the build environment. 
-- Compile Marian in a separate build process that uses the build environment image as its base image.
+- Create an image that contains the build environment (this avoids you having to install all kinds of things on your local machine).
+- Compile Marian in a separate build process that uses the build environment image to compile but uses host-mounted directories so that you can keep intermediate steps around.
 - Create a new image and copy only the necessary bits and pieces into the new image.
 
 ```
 make image/build-environment
-make image/marian-compiled
-make image/marian-runtime
+make image/marian-rest-server
 ```

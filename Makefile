@@ -25,7 +25,7 @@ marian/code/.git: update-marian
 update-marian:
 	git submodule update --init
 
-# Commands for compilation: 
+# Commands for compilation:
 cmake_cmd  = cmake -DBUILD_ARCH=x86-64
 cmake_cmd += -DCMAKE_BUILD_TYPE=Release
 cmake_cmd += -DUSE_STATIC_LIBS=on
@@ -35,9 +35,9 @@ cmake_cmd += -DUSE_SENTENCEPIECE=on
 docker_mounts  = ${PWD}/.git:/.git
 docker_mounts += ${PWD}/marian/code:/marian/code
 docker_mounts += ${PWD}/marian/build:/marian/build
-run_on_docker  = docker run --rm 
+run_on_docker  = docker run --rm
 run_on_docker += $(addprefix -v, ${docker_mounts})
-run_on_docker += --user $$(id -u):$$(id -g) 
+run_on_docker += --user $$(id -u):$$(id -g)
 run_on_docker += ${IMAGE}
 
 # Run cmake
@@ -67,7 +67,7 @@ marian-rest-server/opt/app/ssplit/nonbreaking_prefixes: marian/code/src/3rd_part
 	rsync -avui $< ${@D}
 
 marian-rest-server/opt/app/marian/rest: .git .git/modules/marian/code
-marian-rest-server/opt/app/marian/rest: marian/code/src/server/rest
+marian-rest-server/opt/app/marian/rest: marian/code/src/service/rest
 	rsync -avui $< ${@D}
 
 # Build the Docker image for the Marian REST server
@@ -77,4 +77,3 @@ image/marian-rest-server: marian-rest-server/opt/app/marian/rest
 image/marian-rest-server: marian-rest-server/opt/app/marian/bin/rest-server
 	docker build -t ${IMAGE} ${@F}
 	docker tag ${IMAGE} $(patsubst %:${RT.TAG},%:latest,${IMAGE})
-
