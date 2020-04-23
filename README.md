@@ -46,8 +46,13 @@ At this point, each instance supports only a translation direction. (In the futu
      ```
      where GPU_IDs is a comma-separated list of GPUs on the host that should be made available to the Docker container.
 
-You'll find a web translation page at `http://localhost:18080/api/elg/v1`. The API is described [here](https://github.com/ugermann/marian-docker/wiki/The-ELG-Translation-API)
+The server currently supports two APIs
+- The [ELG API](https://github.com/ugermann/marian-docker/wiki/The-ELG-Translation-API) can be accessed at 
+  `http://localhost:18080/api/elg/v1`.
+- The [Bergamot API](https://github.com/ugermann/marian-docker/wiki/Bergamot-REST-API) can be accessed at 
+  `http://localhost:18080/api/bergamot/v1`.
 
+The server currently does not support https.
 
 ## Creating a Docker image including the model
    For easy deployment in a cluster, you may want create a Docker image with the model integrated.
