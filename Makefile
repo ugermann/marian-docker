@@ -34,33 +34,41 @@ cmake_cmd += -DCMAKE_BUILD_TYPE=Release
 cmake_cmd += -DUSE_STATIC_LIBS=on
 cmake_cmd += -DUSE_SENTENCEPIECE=on
 
+cmake_cmd += -DCOMPILE_CUDA=off
+
 # ... and running things on Docker
-MARIAN_GITDIR:=${PWD}/.git/modules/mts/code/modules/3rd_party/marian
-docker_mounts  = ${MARIAN_GITDIR}:${MARIAN_GITDIR}
-docker_mounts += ${PWD}/mts/code:/mts/code
-docker_mounts += ${PWD}/mts/build:/mts/build
-docker_mounts += ${PWD}/mts/ccache:/.ccache
+MY_GITDIR:=${PWD}/.git
+docker_mounts  = ${PWD}/mts:${PWD}/mts
+docker_mounts += ${PWD}/.git:${PWD}/.git
+docker_mounts += ${PWD}/.gitmodules:${PWD}/.gitmodules
+docker_mounts += ${HOME}/.ccache:/.ccache
 run_on_docker  = docker run --rm
 run_on_docker += $(addprefix -v, ${docker_mounts})
 run_on_docker += --user $$(id -u):$$(id -g)
-run_on_docker += ${IMAGE}
+run_on_docker += ${INTERACTIVE_DOCKER_SESSION} ${IMAGE}
 
 # Run cmake
 mts/build/CMakeCache.txt: IMAGE=${BE.IMAGE}
 mts/build/CMakeCache.txt:
 	mkdir -p ${@D}
 	# git submodule update --init --recursive
-	${run_on_docker} bash -c 'cd /mts/build && ${cmake_cmd} /mts/code'
+	${run_on_docker} bash -c 'cd ${PWD}/mts/build && (${cmake_cmd} ../code || rm CMakeCache.txt)'
 
-mts/ccache:
+${HOME}/.ccache:
 	mkdir -p $@
 
 # Build Marian rest server
 mts/build/rest-server: IMAGE=${BE.IMAGE}
+#mts/build/rest-server: INTERACTIVE_DOCKER_SESSION=-it
 mts/build/rest-server: .git/modules/mts/code
-mts/build/rest-server: mts/ccache
+mts/build/rest-server: ${HOME}/.ccache
 mts/build/rest-server: mts/build/CMakeCache.txt
-	${run_on_docker} bash -c 'cd /mts/build && make -j'
+	${run_on_docker} bash -c 'cd ${PWD}/mts/build && make -j'
+
+debug-compilation: IMAGE=${BE.IMAGE}
+debug-compilation: INTERACTIVE_DOCKER_SESSION=-it
+debug-compilation: mts/ccache
+	${run_on_docker} bash
 
 # Strip symbols from REST server executable to keep things compact
 marian-rest-server/opt/app/marian/bin/rest-server: IMAGE=${BE.IMAGE}
