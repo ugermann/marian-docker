@@ -21,9 +21,12 @@ image/build-environment:
 	docker tag ${BE.IMAGE} $(patsubst %:${BE.TAG},%:latest,${BE.IMAGE})
 
 # Update or check out Marian source code if necessary
-marian/code/.git: update-marian
-update-marian:
-	git submodule update --init
+mts/code/.git: update-mts
+update-mts:
+	git submodule update --recursive --init
+
+mts/code/3rd_party/marian/.git:
+	cd mts/code/3rd_party && git submodule update --init
 
 # Commands for compilation:
 cmake_cmd  = cmake -DBUILD_ARCH=x86-64
@@ -32,42 +35,49 @@ cmake_cmd += -DUSE_STATIC_LIBS=on
 cmake_cmd += -DUSE_SENTENCEPIECE=on
 
 # ... and running things on Docker
-docker_mounts  = ${PWD}/.git:/.git
-docker_mounts += ${PWD}/marian/code:/marian/code
-docker_mounts += ${PWD}/marian/build:/marian/build
+MARIAN_GITDIR:=${PWD}/.git/modules/mts/code/modules/3rd_party/marian
+docker_mounts  = ${MARIAN_GITDIR}:${MARIAN_GITDIR}
+docker_mounts += ${PWD}/mts/code:/mts/code
+docker_mounts += ${PWD}/mts/build:/mts/build
+docker_mounts += ${PWD}/mts/ccache:/.ccache
 run_on_docker  = docker run --rm
 run_on_docker += $(addprefix -v, ${docker_mounts})
 run_on_docker += --user $$(id -u):$$(id -g)
 run_on_docker += ${IMAGE}
 
 # Run cmake
-marian/build/CMakeCache.txt: IMAGE=${BE.IMAGE}
-marian/build/CMakeCache.txt:
+mts/build/CMakeCache.txt: IMAGE=${BE.IMAGE}
+mts/build/CMakeCache.txt:
 	mkdir -p ${@D}
-	git submodule update --init
-	${run_on_docker} bash -c 'cd /marian/build && ${cmake_cmd} /marian/code'
+	# git submodule update --init --recursive
+	${run_on_docker} bash -c 'cd /mts/build && ${cmake_cmd} /mts/code'
+
+mts/ccache:
+	mkdir -p $@
 
 # Build Marian rest server
-marian/build/marian: IMAGE=${BE.IMAGE}
-marian/build/marian: .git/modules/marian/code
-marian/build/marian: marian/build/CMakeCache.txt
-	${run_on_docker} bash -c 'cd /marian/build && make -j'
+mts/build/rest-server: IMAGE=${BE.IMAGE}
+mts/build/rest-server: .git/modules/mts/code
+mts/build/rest-server: mts/ccache
+mts/build/rest-server: mts/build/CMakeCache.txt
+	${run_on_docker} bash -c 'cd /mts/build && make -j'
 
 # Strip symbols from REST server executable to keep things compact
 marian-rest-server/opt/app/marian/bin/rest-server: IMAGE=${BE.IMAGE}
 marian-rest-server/opt/app/marian/bin/rest-server: docker_mounts += ${PWD}/marian-rest-server/opt/app:/opt/app
-marian-rest-server/opt/app/marian/bin/rest-server: marian/build/marian
+marian-rest-server/opt/app/marian/bin/rest-server: mts/build/rest-server
 	mkdir -p ${@D}
-	${run_on_docker} bash -c '/usr/bin/strip /marian/build/rest-server -o /opt/app/marian/bin/rest-server'
+	${run_on_docker} bash -c '/usr/bin/strip /mts/build/rest-server -o /opt/app/marian/bin/rest-server'
 
 # update auxiliary files
-marian-rest-server/opt/app/ssplit/nonbreaking_prefixes: .git .git/modules/marian/code
-marian-rest-server/opt/app/ssplit/nonbreaking_prefixes: marian/code/src/3rd_party/ssplit-cpp/nonbreaking_prefixes
+marian-rest-server/opt/app/ssplit/nonbreaking_prefixes: .git .git/modules/mts/code
+marian-rest-server/opt/app/ssplit/nonbreaking_prefixes: mts/code/3rd_party/ssplit-cpp/nonbreaking_prefixes
 	mkdir -p ${@D}
 	rsync -avui $< ${@D}
 
-marian-rest-server/opt/app/marian/rest: .git .git/modules/marian/code
-marian-rest-server/opt/app/marian/rest: marian/code/src/service/rest
+marian-rest-server/opt/app/marian/rest/ui: .git .git/modules/marian/code
+marian-rest-server/opt/app/marian/rest/ui: mts/code/src/service/rest/ui
+	mkdir -p ${@D}
 	rsync -avui $< ${@D}
 
 # Build the Docker image for the Marian REST server

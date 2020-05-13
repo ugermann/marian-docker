@@ -1,4 +1,4 @@
-FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu16.04
+FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04
 LABEL MAINTAINER="Ulrich Germann <ugermann@inf.ed.ac.uk>"
 ARG GITHASH
 ENV IMAGE_GITHASH=${GITHASH}
@@ -23,7 +23,6 @@ RUN apt-get install -y \
     automake \
     binutils \
     ccache \
-    cmake \
     g++ \
     git \
     libev++-dev \
@@ -41,3 +40,12 @@ RUN apt-get install -y \
 ADD . .
 # RUN rm -rf /var/lib/apt/lists/*
 LABEL GITHASH=${GITHASH}
+
+WORKDIR /usr
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-Linux-x86_64.tar.gz -qO-\
+    | tar xzf - --strip-components 1 
+
+WORKDIR /
+# RUN wget https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-Linux-x86_64.tar.gz
+# RUN apt-get purge -y cmake cmake-data
+#RUN https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-Linux-x86_64.sh
