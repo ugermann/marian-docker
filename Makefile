@@ -75,7 +75,7 @@ marian-rest-server/opt/app/marian/bin/rest-server: IMAGE=${BE.IMAGE}
 marian-rest-server/opt/app/marian/bin/rest-server: docker_mounts += ${PWD}/marian-rest-server/opt/app:/opt/app
 marian-rest-server/opt/app/marian/bin/rest-server: mts/build/rest-server
 	mkdir -p ${@D}
-	${run_on_docker} bash -c '/usr/bin/strip /mts/build/rest-server -o /opt/app/marian/bin/rest-server'
+	${run_on_docker} bash -c '/usr/bin/strip ${PWD}/mts/build/rest-server -o /opt/app/marian/bin/rest-server'
 
 # update auxiliary files
 marian-rest-server/opt/app/ssplit/nonbreaking_prefixes: .git .git/modules/mts/code
